@@ -104,7 +104,6 @@ if uploaded_file is not None:
         if st.button("Ejecutar Análisis Histológico Riguroso", type="primary"):
             with st.spinner("Analizando colorimetría de tinciones y morfología tisular celda por celda..."):
                 
-                # Conversión a HSV para evaluar tonos de Azul/Verde (Astra) vs Rojo/Rosa (Safranina)
                 hsv = cv2.cvtColor(image_cv, cv2.COLOR_BGR2HSV)
                 gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
                 blur = cv2.GaussianBlur(gray, (3, 3), 0)
@@ -129,24 +128,17 @@ if uploaded_file is not None:
                             cX = int(M["m10"] / M["m00"])
                             cY = int(M["m01"] / M["m00"])
                             
-                            # Extraer color HSV promedio en el entorno del contorno para evaluar la tinción
                             mask_cell = np.zeros(gray.shape, dtype=np.uint8)
                             cv2.drawContours(mask_cell, [cnt], -1, 255, -1)
                             mean_hsv = cv2.mean(hsv, mask=mask_cell)
                             h_val, s_val, v_val = mean_hsv[0], mean_hsv[1], mean_hsv[2]
                             
-                            # --- CLASIFICACIÓN RIGUROSA BASADA EN TINCIÓN Y MORFOLOGÍA ---
-                            # Azul de Astra / Cian / Verde (Hue aprox 75 - 120): Zona cambial o expansión
-                            # Safranina / Rojo / Rosa / Naranja (Hue < 25 o > 150): Pared secundaria, lignificación, maduración
-                            
                             if 75 <= h_val <= 125 and s_val > 40:
-                                # Predominio de Azul de Astra (Tejido no lignificado / temprano)
                                 if area_px < 80:
                                     cphase = phase_keys[0] # Zona Cambial (CZ)
                                 else:
                                     cphase = phase_keys[1] # Fase I: Expansión (E)
                             else:
-                                # Predominio de Safranina (Lignificado / avanzado)
                                 if area_px < 150:
                                     cphase = phase_keys[2] # Fase II: Pared Secundaria (W)
                                 elif area_px < 600:
@@ -246,7 +238,7 @@ if uploaded_file is not None:
                 dist_um = dist_px * calculated_scale
                 
                 st.success(f"Distancia registrada: **{dist_um:.2f} µm** ({dist_px:.1f} píxeles)")
-                st.image(working_image, use_container_width=Template=True, caption="Imagen con Medición Trazada")
+                st.image(working_image, use_container_width=True, caption="Imagen con Medición Trazada")
                 
                 res_pil = Image.fromarray(working_image)
                 buf_m = io.BytesIO()
